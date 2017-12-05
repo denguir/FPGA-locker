@@ -11,6 +11,8 @@ ENTITY Brain IS
     btn_next : IN STD_LOGIC;
     btn_save : IN STD_LOGIC;
     btn_lock : IN STD_LOGIC;
+    lock_led : OUT STD_LOGIC;
+    unlock_led : OUT STD_LOGIC;
     display_led0 : OUT STD_LOGIC_VECTOR (4 DOWNTO 0);
     display_led1 : OUT STD_LOGIC_VECTOR (4 DOWNTO 0);
     display_led2 : OUT STD_LOGIC_VECTOR (4 DOWNTO 0);
@@ -19,27 +21,36 @@ ENTITY Brain IS
 END Brain;
 
 ARCHITECTURE Logic of Brain is
+  SIGNAL digit_led0 : STD_LOGIC_VECTOR (3 DOWNTO 0); -- led 0
+  SIGNAL digit_led1 : STD_LOGIC_VECTOR (3 DOWNTO 0); -- led 1
+  SIGNAL digit_led2 : STD_LOGIC_VECTOR (3 DOWNTO 0); -- led 2
+  SIGNAL digit_led3 : STD_LOGIC_VECTOR (3 DOWNTO 0); -- led 3
+
   SIGNAL saved_digit0 : STD_LOGIC_VECTOR (3 DOWNTO 0);
   SIGNAL saved_digit1 : STD_LOGIC_VECTOR (3 DOWNTO 0);
   SIGNAL saved_digit2 : STD_LOGIC_VECTOR (3 DOWNTO 0);
   SIGNAL saved_digit3 : STD_LOGIC_VECTOR (3 DOWNTO 0);
 
   SIGNAL selected_led : STD_LOGIC_VECTOR (1 DOWNTO 0); -- 4 leds
-  SIGNAL status_led: STD_LOGIC; -- lock or unlock
-  SIGNAL digit_led0 : STD_LOGIC_VECTOR (3 DOWNTO 0); -- led 0
-  SIGNAL digit_led1 : STD_LOGIC_VECTOR (3 DOWNTO 0); -- led 1
-  SIGNAL digit_led2 : STD_LOGIC_VECTOR (3 DOWNTO 0); -- led 2
-  SIGNAL digit_led3 : STD_LOGIC_VECTOR (3 DOWNTO 0); -- led 3
+
   BEGIN
     update_digit : PROCESS (clk, rst)
     -- modify the value of the selected digit while turning rotary potentiometer
     BEGIN
       IF rst = '1' THEN
-        display_led0 <= (others => '0');
-        display_led1 <= (others => '0');
-        display_led2 <= (others => '0');
-        display_led3 <= (others => '0');
+        digit_led0 <= (others => '0');
+        digit_led1 <= (others => '0');
+        digit_led2 <= (others => '0');
+        digit_led3 <= (others => '0');
+
+        saved_digit0 <= (others => '0');
+        saved_digit1 <= (others => '0');
+        saved_digit2 <= (others => '0');
+        saved_digit3 <= (others => '0');
+
         selected_led <= (others => '0');
+        unlock_led <= '0';
+        lock_led <= '1';
 
       ELSIF rising_edge(clk) THEN
         IF rotary_pulse = '1' THEN
@@ -69,11 +80,19 @@ ARCHITECTURE Logic of Brain is
     -- select the next digit while pressing on the "next" button
     BEGIN
       IF rst = '1' THEN
-        display_led0 <= (others => '0');
-        display_led1 <= (others => '0');
-        display_led2 <= (others => '0');
-        display_led3 <= (others => '0');
+        digit_led0 <= (others => '0');
+        digit_led1 <= (others => '0');
+        digit_led2 <= (others => '0');
+        digit_led3 <= (others => '0');
+
+        saved_digit0 <= (others => '0');
+        saved_digit1 <= (others => '0');
+        saved_digit2 <= (others => '0');
+        saved_digit3 <= (others => '0');
+
         selected_led <= (others => '0');
+        unlock_led <= '0';
+        lock_led <= '1';
 
       ELSIF rising_edge(clk) THEN
         IF btn_next = '1' THEN
@@ -90,11 +109,19 @@ ARCHITECTURE Logic of Brain is
     -- save in memory the value of the selected digit while pressing on 'save' button
     BEGIN
       IF rst = '1' THEN
-        display_led0 <= (others => '0');
-        display_led1 <= (others => '0');
-        display_led2 <= (others => '0');
-        display_led3 <= (others => '0');
+        digit_led0 <= (others => '0');
+        digit_led1 <= (others => '0');
+        digit_led2 <= (others => '0');
+        digit_led3 <= (others => '0');
+
+        saved_digit0 <= (others => '0');
+        saved_digit1 <= (others => '0');
+        saved_digit2 <= (others => '0');
+        saved_digit3 <= (others => '0');
+
         selected_led <= (others => '0');
+        unlock_led <= '0';
+        lock_led <= '1';
 
       ELSIF rising_edge(clk) THEN
         IF btn_save = '1' THEN
@@ -108,10 +135,40 @@ ARCHITECTURE Logic of Brain is
       END IF;
     END PROCESS save_digit;
 
+    unlock : PROCESS (clk, rst)
+    BEGIN
+      IF rst = '1' THEN
+        digit_led0 <= (others => '0');
+        digit_led1 <= (others => '0');
+        digit_led2 <= (others => '0');
+        digit_led3 <= (others => '0');
 
+        saved_digit0 <= (others => '0');
+        saved_digit1 <= (others => '0');
+        saved_digit2 <= (others => '0');
+        saved_digit3 <= (others => '0');
 
-display_led0 <= selected_led & digit_led0;
-display_led1 <= selected_led & digit_led1;
-display_led2 <= selected_led & digit_led2;
-display_led3 <= selected_led & digit_led3;
+        selected_led <= (others => '0');
+        unlock_led <= '0';
+        lock_led <= '1';
+
+      ELSIF rising_edge(clk) THEN
+        -- if password is correct and button unlock is pressed
+        IF (btn_unlock = '1' AND digit_led0 = saved_digit0 AND digit_led1 = saved_digit1
+          AND digit_led2 = saved_digit2 AND digit_led3 = saved_digit3) THEN
+            unlock_led <= '1';
+            lock_led <= NOT lock_led;
+        ELSE
+          unlock_led <= '0';
+          lock_led <= NOT lock_led;
+        END IF;
+      END IF;
+    END PROCESS unlock;
+
+-- put an additionnal bit to digit_led :
+-- its value is 1 if it is the selected digit (switch on the point led)
+display_led0 <= (selected_led="00") & digit_led0;
+display_led1 <= (selected_led="01") & digit_led1;
+display_led2 <= (selected_led="10") & digit_led2;
+display_led3 <= (selected_led="11") & digit_led3;
 END Logic;
