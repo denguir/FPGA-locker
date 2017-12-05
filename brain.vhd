@@ -157,10 +157,10 @@ ARCHITECTURE Logic of Brain is
         IF (btn_unlock = '1' AND digit_led0 = saved_digit0 AND digit_led1 = saved_digit1
           AND digit_led2 = saved_digit2 AND digit_led3 = saved_digit3) THEN
             unlock_led <= '1';
-            lock_led <= NOT lock_led;
+            lock_led <= '0';
         ELSE
           unlock_led <= '0';
-          lock_led <= NOT lock_led;
+          lock_led <= '1';
         END IF;
       END IF;
     END PROCESS unlock;
