@@ -1,0 +1,43 @@
+--
+-- VHDL Architecture VHDL_PROJECT_lib.clock_divider.clock_divider_arch
+--
+-- Created:
+--          by - Labo.UNKNOWN (PC-000)
+--          at - 15:40:41 15/11/2017
+--
+-- using Mentor Graphics HDL Designer(TM) 2013.1b (Build 2)
+--
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_arith.all;
+
+ENTITY clock_divider IS
+  Port(
+    clk_in : in STD_LOGIC;
+    reset : in STD_LOGIC;
+    clk_out : out STD_LOGIC);
+END ENTITY clock_divider;
+
+--
+ARCHITECTURE clock_divider_arch OF clock_divider IS
+  signal count_max: STD_LOGIC;
+  signal counter: integer range 0 to 6249 := 0;
+BEGIN
+  Process(clk_in, reset)
+  begin
+    if reset='1' then
+      clock_signal <= '0';
+      counter<=0;
+    elsif rising_edge(clk_in) then
+      if (counter = 6249) then
+        clock_signal <= NOT(clock_signal);
+        counter<=0;
+      else
+        counter<=counter+1;  
+      end if;
+    end if;
+  end process;
+  
+  clk_out <= clock_signal;
+END ARCHITECTURE clock_divider_arch;
+
