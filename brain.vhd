@@ -31,48 +31,71 @@ ARCHITECTURE Logic of Brain is
   SIGNAL saved_digit2 : STD_LOGIC_VECTOR (3 DOWNTO 0);
   SIGNAL saved_digit3 : STD_LOGIC_VECTOR (3 DOWNTO 0);
 
-  SIGNAL selected_led : STD_LOGIC_VECTOR (1 DOWNTO 0); -- 4 leds
+  SIGNAL selected_digit : STD_LOGIC_VECTOR (1 DOWNTO 0);
+
+  SIGNAL prev_btn_next : STD_LOGIC;
+  SIGNAL prev_btn_save : STD_LOGIC;
+  SIGNAL prev_btn_lock : STD_LOGIC;
 
   BEGIN
+
     update_digit : PROCESS (clk, rst)
     -- modify the value of the selected digit while turning rotary potentiometer
     BEGIN
       IF rst = '1' THEN
-        digit_led0 <= (others => '0');
-        digit_led1 <= (others => '0');
-        digit_led2 <= (others => '0');
-        digit_led3 <= (others => '0');
+        display_led0 <= (OTHERS => '0');
+        display_led1 <= (OTHERS => '0');
+        display_led2 <= (OTHERS => '0');
+        display_led3 <= (OTHERS => '0');
 
-        saved_digit0 <= (others => '0');
-        saved_digit1 <= (others => '0');
-        saved_digit2 <= (others => '0');
-        saved_digit3 <= (others => '0');
-
-        selected_led <= (others => '0');
-        unlock_led <= '0';
-        lock_led <= '1';
+        digit_led0 <= (OTHERS => '0');
+        digit_led1 <= (OTHERS => '0');
+        digit_led2 <= (OTHERS => '0');
+        digit_led3 <= (OTHERS => '0');
 
       ELSIF rising_edge(clk) THEN
         IF rotary_pulse = '1' THEN
           IF rotary_dir = '1' THEN
-          -- when digit_led = "1111" + '1' -> digit_led = "0000"
-            C1: CASE selected_led IS
-              WHEN "00" => IF digit_led0 NOT "1111" THEN (digit_led0 <= digit_led0 + '1') ELSE (digit_led0 <= "0000") END IF;
-              WHEN "01" => IF digit_led1 NOT "1111" THEN (digit_led1 <= digit_led1 + '1') ELSE (digit_led1 <= "0000") END IF;
-              WHEN "10" => IF digit_led2 NOT "1111" THEN (digit_led2 <= digit_led2 + '1') ELSE (digit_led2 <= "0000") END IF;
-              WHEN "11" => IF digit_led3 NOT "1111" THEN (digit_led3 <= digit_led3 + '1') ELSE (digit_led3 <= "0000") END IF;
+          -- when digit_led = "1001" + '1' -> digit_led = "0000"
+            C1: CASE selected_digit IS
+              WHEN "00" => IF digit_led0 < "1001" THEN (digit_led0 <= digit_led0 + '1') ELSE (digit_led0 <= "0000") END IF;
+              WHEN "01" => IF digit_led1 < "1001" THEN (digit_led1 <= digit_led1 + '1') ELSE (digit_led1 <= "0000") END IF;
+              WHEN "10" => IF digit_led2 < "1001" THEN (digit_led2 <= digit_led2 + '1') ELSE (digit_led2 <= "0000") END IF;
+              WHEN OTHERS => IF digit_led3 < "1001" THEN (digit_led3 <= digit_led3 + '1') ELSE (digit_led3 <= "0000") END IF;
             END CASE C1;
 
           ELSIF rotary_dir = '0' THEN
-          -- when digit_led = "0000" - '1' -> digit_led = "1111"
-            C0: CASE selected_led IS
-              WHEN "00" => IF digit_led0 NOT "0000" THEN (digit_led0 <= digit_led0 - '1') ELSE (digit_led0 <= "1111") END IF;
-              WHEN "01" => IF digit_led1 NOT "0000" THEN (digit_led1 <= digit_led1 - '1') ELSE (digit_led1 <= "1111") END IF;
-              WHEN "10" => IF digit_led2 NOT "0000" THEN (digit_led2 <= digit_led2 - '1') ELSE (digit_led2 <= "1111") END IF;
-              WHEN "11" => IF digit_led3 NOT "0000" THEN (digit_led3 <= digit_led3 - '1') ELSE (digit_led3 <= "1111") END IF;
+          -- when digit_led = "0000" - '1' -> digit_led = "1001"
+            C0: CASE selected_digit IS
+              WHEN "00" => IF digit_led0 > "0000" THEN (digit_led0 <= digit_led0 - '1') ELSE (digit_led0 <= "1001") END IF;
+              WHEN "01" => IF digit_led1 > "0000" THEN (digit_led1 <= digit_led1 - '1') ELSE (digit_led1 <= "1001") END IF;
+              WHEN "10" => IF digit_led2 > "0000" THEN (digit_led2 <= digit_led2 - '1') ELSE (digit_led2 <= "1001") END IF;
+              WHEN OTHERS => IF digit_led3 > "0000" THEN (digit_led3 <= digit_led3 - '1') ELSE (digit_led3 <= "1001") END IF;
             END CASE C0;
           END IF;
         END IF;
+        -- update the displayed digit using the digit_led and the selected_digit signals
+        CASE selected_digit IS
+          WHEN "00" =>  display_led0 <= '1' & digit_led0;
+                        display_led1 <= '0' & digit_led1;
+                        display_led2 <= '0' & digit_led2;
+                        display_led3 <= '0' & digit_led3;
+
+          WHEN "01" =>  display_led0 <= '0' & digit_led0;
+                        display_led1 <= '1' & digit_led1;
+                        display_led2 <= '0' & digit_led2;
+                        display_led3 <= '0' & digit_led3;
+
+          WHEN "10" =>  display_led0 <= '0' & digit_led0;
+                        display_led1 <= '0' & digit_led1;
+                        display_led2 <= '1' & digit_led2;
+                        display_led3 <= '0' & digit_led3;
+
+          WHEN OTHERS =>  display_led0 <= '0' & digit_led0;
+                          display_led1 <= '0' & digit_led1;
+                          display_led2 <= '0' & digit_led2;
+                          display_led3 <= '1' & digit_led3;
+        END CASE;
       END IF;
     END PROCESS update_digit;
 
@@ -80,57 +103,43 @@ ARCHITECTURE Logic of Brain is
     -- select the next digit while pressing on the "next" button
     BEGIN
       IF rst = '1' THEN
-        digit_led0 <= (others => '0');
-        digit_led1 <= (others => '0');
-        digit_led2 <= (others => '0');
-        digit_led3 <= (others => '0');
-
-        saved_digit0 <= (others => '0');
-        saved_digit1 <= (others => '0');
-        saved_digit2 <= (others => '0');
-        saved_digit3 <= (others => '0');
-
-        selected_led <= (others => '0');
-        unlock_led <= '0';
-        lock_led <= '1';
+        select_digit <= (OTHERS => '0');
+        prev_btn_next <= '0';
 
       ELSIF rising_edge(clk) THEN
-        IF btn_next = '1' THEN
-          IF selected_led = "11" THEN
-            selected_led <= "00";
+        IF btn_next = '1' AND prev_btn_next = '0' THEN
+          prev_btn_next <= '1';
+          IF selected_digit = "11" THEN
+            selected_digit <= "00";
           ELSE
-            selected_led <= selected_led + '1';
+            selected_digit <= selected_digit + '1';
           END IF;
+        ELSIF btn_next = '0' AND prev_btn_next = '1' THEN
+          prev_btn_next <= '0';
         END IF;
       END IF;
     END PROCESS select_digit;
 
     save_digit : PROCESS (clk, rst)
-    -- save in memory the value of the selected digit while pressing on 'save' button
+    -- save in memory the value of the 4 digits while pressing on 'save' button
+    -- pressing on save button locks the system
     BEGIN
       IF rst = '1' THEN
-        digit_led0 <= (others => '0');
-        digit_led1 <= (others => '0');
-        digit_led2 <= (others => '0');
-        digit_led3 <= (others => '0');
-
-        saved_digit0 <= (others => '0');
-        saved_digit1 <= (others => '0');
-        saved_digit2 <= (others => '0');
-        saved_digit3 <= (others => '0');
-
-        selected_led <= (others => '0');
-        unlock_led <= '0';
-        lock_led <= '1';
+        saved_digit0 <= (OTHERS => '0')
+        saved_digit1 <= (OTHERS => '0')
+        saved_digit2 <= (OTHERS => '0')
+        saved_digit3 <= (OTHERS => '0')
+        prev_btn_save <= '0';
 
       ELSIF rising_edge(clk) THEN
-        IF btn_save = '1' THEN
-          C1: CASE selected_led IS
-            WHEN "00" => (saved_digit0 <= digit_led0);
-            WHEN "01" => (saved_digit1 <= digit_led1);
-            WHEN "10" => (saved_digit2 <= digit_led2);
-            WHEN "11" => (saved_digit3 <= digit_led3);
-          END CASE C1;
+        IF btn_save = '1' AND prev_btn_save = '0' THEN
+          prev_btn_save <= '1';
+          saved_digit0 <= digit_led0;
+          saved_digit1 <= digit_led1;
+          saved_digit2 <= digit_led2;
+          saved_digit3 <= digit_led3;
+        ELSIF btn_save = '0' AND prev_btn_save = '1' THEN
+          prev_btn_save <= '0';
         END IF;
       END IF;
     END PROCESS save_digit;
@@ -138,37 +147,33 @@ ARCHITECTURE Logic of Brain is
     unlock : PROCESS (clk, rst)
     BEGIN
       IF rst = '1' THEN
-        digit_led0 <= (others => '0');
-        digit_led1 <= (others => '0');
-        digit_led2 <= (others => '0');
-        digit_led3 <= (others => '0');
-
-        saved_digit0 <= (others => '0');
-        saved_digit1 <= (others => '0');
-        saved_digit2 <= (others => '0');
-        saved_digit3 <= (others => '0');
-
-        selected_led <= (others => '0');
-        unlock_led <= '0';
-        lock_led <= '1';
+        prev_btn_lock <= '0';
+        lock_led <= '1'; -- initially locked
+        unlocked_led <= '0';
 
       ELSIF rising_edge(clk) THEN
-        -- if password is correct and button unlock is pressed
-        IF (btn_unlock = '1' AND digit_led0 = saved_digit0 AND digit_led1 = saved_digit1
-          AND digit_led2 = saved_digit2 AND digit_led3 = saved_digit3) THEN
+        -- if password is correct and btn_lock is pressed while the state is locked then unlock
+        IF (btn_lock = '1' AND prev_btn_lock = '0' AND lock_led = '1' AND unlock_led = '0' AND digit_led0 = saved_digit0
+            AND digit_led1 = saved_digit1 AND digit_led2 = saved_digit2 AND digit_led3 = saved_digit3) THEN
+            prev_btn_lock <= '1';
             unlock_led <= '1';
             lock_led <= '0';
-        ELSE
-          unlock_led <= '0';
-          lock_led <= '1';
+            -- display set to "0000"
+            digit_led0 <= (OTHERS => '0');
+            digit_led1 <= (OTHERS => '0');
+            digit_led2 <= (OTHERS => '0');
+            digit_led3 <= (OTHERS => '0');
+
+        -- if btn_lock is pressed while the state is unlocked then lock
+        ELSIF (btn_lock = '1' AND prev_btn_lock = '0' AND lock_led = '0' AND unlock_led = '1') THEN
+            prev_btn_lock <= '1';
+            unlock_led <= '0';
+            lock_led <= '1';
+        -- when the button is unpressed
+        ELSIF (btn_lock = '0' AND prev_btn_lock = '1') THEN
+            prev_btn_lock <= '0';
+
         END IF;
       END IF;
     END PROCESS unlock;
-
--- put an additionnal bit to digit_led :
--- its value is 1 if it is the selected digit (switch on the point led)
-display_led0 <= (selected_led="00") & digit_led0;
-display_led1 <= (selected_led="01") & digit_led1;
-display_led2 <= (selected_led="10") & digit_led2;
-display_led3 <= (selected_led="11") & digit_led3;
 END Logic;
