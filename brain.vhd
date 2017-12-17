@@ -109,10 +109,10 @@ ARCHITECTURE Logic of Brain is
       ELSIF rising_edge(clk) THEN
         IF btn_next = '1' AND prev_btn_next = '0' THEN
           prev_btn_next <= '1';
-          IF selected_digit = "11" THEN
-            selected_digit <= "00";
-          ELSE
+          IF selected_digit < "11" THEN
             selected_digit <= selected_digit + '1';
+          ELSE
+            selected_digit <= "00";
           END IF;
         ELSIF btn_next = '0' AND prev_btn_next = '1' THEN
           prev_btn_next <= '0';
@@ -122,7 +122,6 @@ ARCHITECTURE Logic of Brain is
 
     save_digit : PROCESS (clk, rst)
     -- save in memory the value of the 4 digits while pressing on 'save' button
-    -- pressing on save button locks the system
     BEGIN
       IF rst = '1' THEN
         saved_digit0 <= (OTHERS => '0')
