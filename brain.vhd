@@ -43,7 +43,7 @@ ARCHITECTURE Logic of Brain is
     -- modify the value of the selected digit while turning rotary potentiometer
     BEGIN
       IF rst = '1' THEN
-        display_led0 <= (OTHERS => '0');
+        display_led0 <= (3 => '1', OTHERS => '0');
         display_led1 <= (OTHERS => '0');
         display_led2 <= (OTHERS => '0');
         display_led3 <= (OTHERS => '0');
@@ -58,19 +58,19 @@ ARCHITECTURE Logic of Brain is
           IF rotary_dir = '1' THEN
           -- when digit_led = "1001" + '1' -> digit_led = "0000"
             C1: CASE selected_digit IS
-              WHEN "00" => IF digit_led0 < "1001" THEN (digit_led0 <= digit_led0 + '1') ELSE (digit_led0 <= "0000") END IF;
-              WHEN "01" => IF digit_led1 < "1001" THEN (digit_led1 <= digit_led1 + '1') ELSE (digit_led1 <= "0000") END IF;
-              WHEN "10" => IF digit_led2 < "1001" THEN (digit_led2 <= digit_led2 + '1') ELSE (digit_led2 <= "0000") END IF;
-              WHEN OTHERS => IF digit_led3 < "1001" THEN (digit_led3 <= digit_led3 + '1') ELSE (digit_led3 <= "0000") END IF;
+              WHEN "00" => IF digit_led0 < "1001" THEN digit_led0 <= digit_led0 + '1'; ELSE digit_led0 <= "0000"; END IF;
+              WHEN "01" => IF digit_led1 < "1001" THEN digit_led1 <= digit_led1 + '1'; ELSE digit_led1 <= "0000"; END IF;
+              WHEN "10" => IF digit_led2 < "1001" THEN digit_led2 <= digit_led2 + '1'; ELSE digit_led2 <= "0000"; END IF;
+              WHEN OTHERS => IF digit_led3 < "1001" THEN digit_led3 <= digit_led3 + '1'; ELSE digit_led3 <= "0000"; END IF;
             END CASE C1;
 
           ELSIF rotary_dir = '0' THEN
           -- when digit_led = "0000" - '1' -> digit_led = "1001"
             C0: CASE selected_digit IS
-              WHEN "00" => IF digit_led0 > "0000" THEN (digit_led0 <= digit_led0 - '1') ELSE (digit_led0 <= "1001") END IF;
-              WHEN "01" => IF digit_led1 > "0000" THEN (digit_led1 <= digit_led1 - '1') ELSE (digit_led1 <= "1001") END IF;
-              WHEN "10" => IF digit_led2 > "0000" THEN (digit_led2 <= digit_led2 - '1') ELSE (digit_led2 <= "1001") END IF;
-              WHEN OTHERS => IF digit_led3 > "0000" THEN (digit_led3 <= digit_led3 - '1') ELSE (digit_led3 <= "1001") END IF;
+              WHEN "00" => IF digit_led0 > "0000" THEN digit_led0 <= digit_led0 - '1'; ELSE digit_led0 <= "1001"; END IF;
+              WHEN "01" => IF digit_led1 > "0000" THEN digit_led1 <= digit_led1 - '1'; ELSE digit_led1 <= "1001"; END IF;
+              WHEN "10" => IF digit_led2 > "0000" THEN digit_led2 <= digit_led2 - '1'; ELSE digit_led2 <= "1001"; END IF;
+              WHEN OTHERS => IF digit_led3 > "0000" THEN digit_led3 <= digit_led3 - '1'; ELSE digit_led3 <= "1001"; END IF;
             END CASE C0;
           END IF;
         END IF;

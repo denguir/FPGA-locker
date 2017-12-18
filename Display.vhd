@@ -31,12 +31,12 @@ BEGIN
   begin
   if i_rst = '1' then
     Counter <= "00";
-    Led1 <= (others =>'0');
-    Led2 <= (others =>'0');
-    Led3 <= (others =>'0');
-    Led4 <= (others =>'0');
-    o_selected_digit <= "1111";
-    o_i_digit_digit <= "11111111";
+    Led1 <= "00000010";
+    Led2 <= "00000011";
+    Led3 <= "00000011";
+    Led4 <= "00000011";
+    o_selected_digit <= "0111";
+    o_i_digit_digit <= "00000010";
 
   elsif rising_edge(i_clk) then
     Counter <= Counter + 1;
